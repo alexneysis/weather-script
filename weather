@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 
 from coordinates import get_coordinates
+from exceptions import CantGetCoordinates, ApiServiceError
 from weather_api_service import get_weather
 from weather_formatter import format_weather
 
 
 def main():
-    coordinates = get_coordinates()
-    weather = get_weather(coordinates)
+    try:
+        coordinates = get_coordinates()
+    except CantGetCoordinates:
+        print("Couldn't get GPS coordinates")
+        exit(1)
+    try:
+        weather = get_weather(coordinates)
+    except ApiServiceError:
+        print(f"Couldn't get weather by GPS coordinates {coordinates}")
+        exit(1)
     print(format_weather(weather))
 
 
