@@ -1,7 +1,7 @@
 import json
 import ssl
 from json import JSONDecodeError
-from typing import NamedTuple, Literal
+from typing import NamedTuple, Literal, Dict
 from urllib import request
 from urllib.error import URLError
 
@@ -20,7 +20,7 @@ def get_coordinates() -> Coordinates:
     return coordinates
 
 
-def _get_ipinfo_response() -> dict:
+def _get_ipinfo_response() -> str:
     ssl._create_default_https_context = ssl._create_unverified_context
     try:
         return request.urlopen(IPINFO_URL).read()
@@ -28,7 +28,7 @@ def _get_ipinfo_response() -> dict:
         raise CantGetCoordinates
 
 
-def _parse_ipinfo_response(ipinfo_response: dict) -> Coordinates:
+def _parse_ipinfo_response(ipinfo_response: str) -> Coordinates:
     try:
         ipinfo_dict = json.loads(ipinfo_response)
         lat, lon = map(_parse_coordinate, _parse_coordinates(ipinfo_dict).split(","))
@@ -39,7 +39,7 @@ def _parse_ipinfo_response(ipinfo_response: dict) -> Coordinates:
         raise CantGetCoordinates
 
 
-def _parse_coordinates(ipinfo_dict: [Literal["loc"], str]) -> str:
+def _parse_coordinates(ipinfo_dict: Dict[Literal["loc"], str]) -> str:
     try:
         return ipinfo_dict["loc"]
     except KeyError:

@@ -58,7 +58,7 @@ def _parse_openweather_response(openweather_response: str) -> Weather:
         return Weather(
             temperature=_parse_temperature(openweather_dict),
             weather_type=_parse_weather_type(openweather_dict),
-            sunrise=_parse_sun_time(openweather_dict, "sunrice"),
+            sunrise=_parse_sun_time(openweather_dict, "sunrise"),
             sunset=_parse_sun_time(openweather_dict, "sunset"),
             city=_parse_city(openweather_dict),
         )
@@ -86,18 +86,17 @@ def _parse_weather_type(openweather_dict: dict) -> WeatherType:
         "6": WeatherType.SNOW,
         "7": WeatherType.FOG,
         "800": WeatherType.CLEAR,
-        "80": WeatherType.CLOUDS,
+        "804": WeatherType.CLOUDS,
     }
 
     for _id, _weather_type in weather_types.items():
         if weather_type_id.startswith(_id):
             return _weather_type
-
     raise ApiServiceError
 
 
 def _parse_sun_time(openweather_dict: dict,
-                    time: Literal["sunrice"] | Literal["sunset"]) -> datetime:
+                    time: Literal["sunrise"] | Literal["sunset"]) -> datetime:
     try:
         return datetime.fromtimestamp(openweather_dict["sys"][time])
     except KeyError:
