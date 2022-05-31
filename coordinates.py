@@ -1,7 +1,9 @@
-from typing import NamedTuple
+import ssl
+from typing import NamedTuple, Literal
+from urllib import request
+from urllib.error import URLError
 
-import requests
-
+from config import IPINFO_URL
 from exceptions import CantGetCoordinates
 
 
@@ -11,26 +13,32 @@ class Coordinates(NamedTuple):
 
 
 def get_coordinates() -> Coordinates:
-    response = _get_info_from_ipinfo()
-    coordinates = _parse_coordinates_from_ipinfo(response)
+    response = _get_ipinfo_response()
+    coordinates = _parse_ipinfo_response(response)
     return coordinates
 
 
-def _get_info_from_ipinfo() -> dict:
-    url = "https://ipinfo.io"
-    response = requests.get(url)
-    if not response.ok:
-        raise CantGetCoordinates("Can't get GPS coordinates from site")
-
-    return response.json()
-
-
-def _parse_coordinates_from_ipinfo(ipinfo_response: dict) -> Coordinates:
+def _get_ipinfo_response() -> dict:
+    ssl._create_default_https_context = ssl._create_unverified_context
     try:
-        lat, lon = map(_parse_coordinate, ipinfo_response["loc"].split(","))
+        return request.urlopen(IPINFO_URL).read()
+    except URLError:
+        raise CantGetCoordinates
+
+
+def _parse_ipinfo_response(ipinfo_response: dict) -> Coordinates:
+    try:
+        lat, lon = map(_parse_coordinate, _parse_coordinates(ipinfo_response).split(","))
         return Coordinates(latitude=lat, longitude=lon)
     except KeyError:
         raise CantGetCoordinates("Can't parse GPS coordinates")
+
+
+def _parse_coordinates(ipinfo_dict: [Literal["loc"], str]) -> str:
+    try:
+        return ipinfo_dict["loc"]
+    except KeyError:
+        raise CantGetCoordinates
 
 
 def _parse_coordinate(value: str) -> float:
