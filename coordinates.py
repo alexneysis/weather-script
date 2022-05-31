@@ -1,4 +1,6 @@
+import json
 import ssl
+from json import JSONDecodeError
 from typing import NamedTuple, Literal
 from urllib import request
 from urllib.error import URLError
@@ -28,10 +30,13 @@ def _get_ipinfo_response() -> dict:
 
 def _parse_ipinfo_response(ipinfo_response: dict) -> Coordinates:
     try:
-        lat, lon = map(_parse_coordinate, _parse_coordinates(ipinfo_response).split(","))
+        ipinfo_dict = json.loads(ipinfo_response)
+        lat, lon = map(_parse_coordinate, _parse_coordinates(ipinfo_dict).split(","))
         return Coordinates(latitude=lat, longitude=lon)
     except KeyError:
         raise CantGetCoordinates("Can't parse GPS coordinates")
+    except JSONDecodeError:
+        raise CantGetCoordinates
 
 
 def _parse_coordinates(ipinfo_dict: [Literal["loc"], str]) -> str:
